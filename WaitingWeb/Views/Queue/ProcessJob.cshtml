@@ -1,0 +1,12 @@
+﻿@{
+    ViewBag.Title = "Processing Job";
+}
+
+<h2>Processing Job</h2>
+<p>Queue: @ViewBag.QueueName</p>
+<p>Request ID: @ViewBag.RequestId</p>
+<p>Your job is running... please wait.</p>
+
+<form method="post" action="/queue/dequeue/@ViewBag.QueueName/@ViewBag.RequestId">
+    <button type="submit" class="btn btn-success">เสร็จสิ้น</button>
+</form>
