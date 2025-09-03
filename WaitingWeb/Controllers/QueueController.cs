@@ -55,7 +55,18 @@ public class QueueController : Controller
     public async Task<IActionResult> CheckPosition(string queueName, string requestId)
     {
         var pos = await _queueService.GetQueuePositionAsync(queueName, requestId);
-        return Json(new { position = pos });
+        var currentLength = await _queueService.GetQueueLengthAsync(queueName);
+        var maxConcurrent = _queueService.GetMaxConcurrent(queueName);
+
+        bool canStart = pos > 0 && pos <= maxConcurrent;
+
+        return Json(new
+        {
+            position = pos,
+            currentLength,
+            maxConcurrent,
+            canStart
+        });
     }
 
     [HttpPost("queue/dequeue/{queueName}/{requestId}")]

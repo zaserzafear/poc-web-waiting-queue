@@ -89,4 +89,19 @@ public class RedisQueueService
         _logger.LogInformation("Dequeuing requestId {RequestId} from queue '{Queue}'", requestId, queueName);
         await _db.SortedSetRemoveAsync(key, requestId);
     }
+
+    public async Task<long> GetQueueLengthAsync(string queueName)
+    {
+        var key = GetQueueKey(queueName);
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        await _db.SortedSetRemoveRangeByScoreAsync(key, double.NegativeInfinity, now);
+        return await _db.SortedSetLengthAsync(key);
+    }
+
+    public int GetMaxConcurrent(string queueName)
+    {
+        return _options.QueueManagement.ContainsKey(queueName)
+            ? _options.QueueManagement[queueName]
+            : 1;
+    }
 }

@@ -7,42 +7,29 @@
 
 <h2>Queue: @queueName</h2>
 <p id="position">Your position in queue: @position</p>
+<p id="length"></p>
 <p>Please wait... the system will redirect you when it's your turn.</p>
 
 <script>
-    // Poll every 5 seconds to check position
-    setInterval(async () => {
-        console.log(`[Polling] Checking queue for requestId=@requestId at ${new Date().toISOString()}`);
-
+    async function pollQueue() {
         try {
             const url = `/queue/checkposition/@queueName/@requestId`;
-            console.log("Fetching:", url);
-
             const response = await fetch(url);
-            console.log("Raw response:", response);
-
-            if (!response.ok) {
-                console.error("Fetch error:", response.status, response.statusText);
-                return;
-            }
+            if (!response.ok) return;
 
             const data = await response.json();
-            console.log("Response data:", data);
 
-            if (data.position > 0 && data.position <= 100) {
-                console.log(`[SUCCESS] Request @requestId is ready. Redirecting to process page.`);
+            document.getElementById("position").innerText = "Your position in queue: " + data.position;
+            document.getElementById("length").innerText = "Current queue length: " + data.currentLength + " / " + data.maxConcurrent;
+
+            // Server บอกว่าคุณได้คิว → redirect อัตโนมัติ
+            if (data.canStart) {
                 window.location.href = `/queue/process/@queueName/@requestId`;
-            } else if (data.position > 0) {
-                console.log(`[INFO] Current position: ${data.position}`);
-                document.getElementById("position").innerText =
-                    "Your position in queue: " + data.position;
-            } else {
-                console.warn(`[WARN] Request @requestId not found in queue.`);
-                document.getElementById("position").innerText =
-                    "You are no longer in the queue (expired or removed).";
             }
         } catch (err) {
-            console.error("Exception while fetching position:", err);
+            console.error("Polling error:", err);
         }
-    }, 5000);
+    }
+
+    setInterval(pollQueue, 5000);
 </script>
